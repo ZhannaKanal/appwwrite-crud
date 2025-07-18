@@ -1,7 +1,6 @@
 import client from "@/lib/appwrite_client";
 import { Databases } from "appwrite";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
 const database = new Databases(client);
 
@@ -52,16 +51,15 @@ async function updateInterpretation(
   }
 }
 
-// ✅ Correct API route handlers
-export async function GET(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function GET(req: Request) {
   try {
-    const { id } = context.params;
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").pop(); // extracts ID from URL
+    if (!id) throw new Error("No ID provided");
+
     const interpretation = await fetchInterpretation(id);
     return NextResponse.json({ interpretation });
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: "Failed to fetch interpretation" },
       { status: 500 }
@@ -69,15 +67,15 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function DELETE(req: Request) {
   try {
-    const { id } = context.params;
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").pop(); // extracts ID from URL
+    if (!id) throw new Error("No ID provided");
+
     await deleteInterpretation(id);
     return NextResponse.json({ message: "Interpretation deleted" });
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: "Failed to delete interpretation" },
       { status: 500 }
@@ -85,16 +83,16 @@ export async function DELETE(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function PUT(req: Request) {
   try {
-    const { id } = context.params;
+    const url = new URL(req.url);
+    const id = url.pathname.split("/").pop(); // extracts ID from URL
+    if (!id) throw new Error("No ID provided");
+
     const data = await req.json();
     await updateInterpretation(id, data);
     return NextResponse.json({ message: "Interpretation updated" });
-  } catch {
+  } catch (error) {
     return NextResponse.json(
       { error: "Failed to update interpretation" },
       { status: 500 }
