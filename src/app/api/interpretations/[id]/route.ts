@@ -1,6 +1,7 @@
 import client from "@/lib/appwrite_client";
 import { Databases } from "appwrite";
 import { NextResponse } from "next/server";
+import { use } from "react";
 
 const database = new Databases(client);
 
@@ -52,10 +53,10 @@ async function updateInterpretation(
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string } >}
 ) {
   try {
-    const id = params.id;
+      const { id } = use(params);
     const interpretation = await fetchInterpretation(id);
     return NextResponse.json({ interpretation });
   } catch (error) {
