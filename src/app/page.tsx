@@ -1,103 +1,78 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+
+interface Interpretations {
+  $id: string;
+  term: string;
+  interpretation: string;
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [interpretations, setInterpretations] = useState<Interpretations[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const fetchInterpretations = async () => {
+      setIsLoading(true);
+      try {
+        const response = await fetch("/api/interpretations");
+        if (!response.ok) {
+          throw new Error("Failed to fetch interpretations");
+        }
+        const data = await response.json();
+        setInterpretations(data);
+      } catch (error) {
+        console.log("Error", error);
+        setError("Failed to fetch");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInterpretations();
+  }, []);
+  
+  const handleDelete =  async(id:string) => {
+    try {
+      await fetch(`/api/interpretations/${id}`, { method: "DELETE" });
+      setInterpretations((prevInterpretations)=>prevInterpretations?.filter((i)=>i.$id !==id))
+    } catch (error) {
+      setError("Failed to delete interpretation");
+    }
+  }
+
+  return (
+    <div>
+      {error && <p className="py-[16px] text-[red]">{error}</p>}{" "}
+      {isLoading ? (
+        <p>Loading interpretations</p>
+      ) : interpretations?.length > 0 ? (
+        <div>
+          {interpretations?.map((interpretation) => (
+            <div
+              key={interpretation.$id}
+              className="border-b leading-8 rounded-[7px] p-[16px] my-[8px]"
+            >
+             <div className="text-[24px] font-bold">{interpretation.term}</div>
+              <div className="text-[16px]">{interpretation.interpretation}</div>
+              <div className="mt-[16px] flex justify-end gap-[4px] text-[16px]">
+                <Link
+                  href={`/edit/${interpretation.$id}`}
+                  className="px-[16px] py-[8px] bg-[orange] no-underline text-[black] rounded-[7px] text-[16px]"
+                >
+                  Edit
+                </Link>
+                <button onClick={()=>handleDelete(interpretation.$id)} className="bg-[red] px-[16px] py-[8px] no-underline rounded-[7px] border-none text-[16px] text-[white]">
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      ): (<p>No interpretation found</p>)}
     </div>
   );
 }
